@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { getModelToken } from '@nestjs/mongoose';
@@ -90,7 +89,8 @@ describe('UserService - Integration Tests', () => {
         city: 'Tokyo',
       });
 
-      const result = await service.findById(newUser.id);
+      // Koristimo _id.toString() da dobijemo string ID
+      const result = await service.findById(newUser._id.toString());
 
       expect(result.username).toBe('John Doe');
       expect(result.age).toBe(30);
@@ -99,8 +99,8 @@ describe('UserService - Integration Tests', () => {
 
     it('should throw NotFoundException if user not found', async () => {
       try {
-        // Koristimo validan MongoDB ObjectId koji ne postoji u bazi
-        const invalidId = new mongoose.Types.ObjectId().toString(); // Kreira validan ID
+        // Kreiramo validan, ali nepostojeći ObjectId
+        const invalidId = new mongoose.Types.ObjectId().toString();
         await service.findById(invalidId);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
@@ -117,7 +117,12 @@ describe('UserService - Integration Tests', () => {
       });
 
       const updatedUser = { username: 'John Updated', age: 33, city: 'Oslo' };
-      const result = await service.updateById(newUser.id, updatedUser);
+
+      // Koristimo _id.toString() da bismo poslali string ID
+      const result = await service.updateById(
+        newUser._id.toString(),
+        updatedUser,
+      );
 
       expect(result).not.toBeNull();
       if (result) {
@@ -136,7 +141,8 @@ describe('UserService - Integration Tests', () => {
         city: 'Tokyo',
       });
 
-      const result = await service.deleteById(newUser.id);
+      // Koristimo _id.toString() da bismo poslali string ID
+      const result = await service.deleteById(newUser._id.toString());
 
       expect(result).not.toBeNull();
       if (result) {
@@ -147,7 +153,7 @@ describe('UserService - Integration Tests', () => {
     });
 
     it('should return null if user not found', async () => {
-      const invalidId = new mongoose.Types.ObjectId().toString(); // Kreira validan ID koji ne postoji u bazi
+      const invalidId = new mongoose.Types.ObjectId().toString(); // Kreiramo validan ID koji ne postoji u bazi
       const result = await service.deleteById(invalidId);
       expect(result).toBeNull();
     });

@@ -6,7 +6,6 @@ import { UserService } from './user.service';
 import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as mongoose from 'mongoose'; // Za generisanje _id
 
 describe('UserController', () => {
   let userController: UserController;
@@ -37,12 +36,9 @@ describe('UserController', () => {
 
   describe('getAllUsers', () => {
     it('should return an array of users', async () => {
-      const userId1 = new mongoose.Types.ObjectId();
-      const userId2 = new mongoose.Types.ObjectId();
-
       const result: User[] = [
-        { _id: userId1, username: 'John', age: 25, city: 'New York' },
-        { _id: userId2, username: 'Jane', age: 30, city: 'London' },
+        { username: 'John', age: 25, city: 'New York' },
+        { username: 'Jane', age: 30, city: 'London' },
       ];
       mockUserService.findAll.mockResolvedValue(result);
 
@@ -58,8 +54,7 @@ describe('UserController', () => {
         age: 28,
         city: 'Tokyo',
       };
-      const userId = new mongoose.Types.ObjectId();
-      const result: User = { _id: userId, ...createUserDto };
+      const result: User = { ...createUserDto }; // Nema _id, samo DTO
       mockUserService.create.mockResolvedValue(result);
 
       expect(await userController.createUser(createUserDto)).toBe(result);
@@ -69,17 +64,15 @@ describe('UserController', () => {
 
   describe('getUser', () => {
     it('should return a user by ID', async () => {
-      const userId = new mongoose.Types.ObjectId();
       const result: User = {
-        _id: userId,
         username: 'John',
         age: 25,
         city: 'New York',
       };
       mockUserService.findById.mockResolvedValue(result);
 
-      expect(await userController.getUser(userId.toString())).toBe(result);
-      expect(mockUserService.findById).toHaveBeenCalledWith(userId.toString());
+      expect(await userController.getUser('valid-id')).toBe(result);
+      expect(mockUserService.findById).toHaveBeenCalledWith('valid-id');
     });
 
     it('should throw an error if user not found', async () => {
@@ -95,20 +88,19 @@ describe('UserController', () => {
 
   describe('updateUser', () => {
     it('should update and return the user', async () => {
-      const userId = new mongoose.Types.ObjectId();
       const updateUserDto: UpdateUserDto = {
         username: 'Updated Name',
         age: 32,
         city: 'Berlin',
       };
-      const result: User = { _id: userId, ...updateUserDto };
+      const result: User = { ...updateUserDto }; // Nema _id, samo DTO
       mockUserService.updateById.mockResolvedValue(result);
 
-      expect(
-        await userController.updateUser(userId.toString(), updateUserDto),
-      ).toBe(result);
+      expect(await userController.updateUser('valid-id', updateUserDto)).toBe(
+        result,
+      );
       expect(mockUserService.updateById).toHaveBeenCalledWith(
-        userId.toString(),
+        'valid-id',
         updateUserDto,
       );
     });
@@ -116,19 +108,15 @@ describe('UserController', () => {
 
   describe('deleteUser', () => {
     it('should delete and return the user', async () => {
-      const userId = new mongoose.Types.ObjectId();
       const result: User = {
-        _id: userId,
         username: 'John',
         age: 25,
         city: 'New York',
       };
       mockUserService.deleteById.mockResolvedValue(result);
 
-      expect(await userController.deleteUser(userId.toString())).toBe(result);
-      expect(mockUserService.deleteById).toHaveBeenCalledWith(
-        userId.toString(),
-      );
+      expect(await userController.deleteUser('valid-id')).toBe(result);
+      expect(mockUserService.deleteById).toHaveBeenCalledWith('valid-id');
     });
 
     it('should return null if user not found', async () => {
